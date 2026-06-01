@@ -73,13 +73,17 @@ Do not explain your reasoning. Output valid JSON only, starting with "{" and end
     const result = await model.generateContent(extractionPrompt);
     let responseText = result.response.text().trim();
     
-    // Clean markdown formatting if any
-    if (responseText.startsWith('```')) {
-      responseText = responseText.replace(/```json|```/g, '').trim();
+    // Robust cleaning of markdown formatting
+    let jsonText = responseText;
+    const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/) || jsonText.match(/```\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[1].trim();
+    } else {
+      jsonText = jsonText.trim();
     }
     
-    console.log('AI Extraction parsed response:', responseText);
-    const updates = JSON.parse(responseText);
+    console.log('AI Extraction parsed response:', jsonText);
+    const updates = JSON.parse(jsonText);
 
     if (updates && updates.hasUpdates !== false) {
       console.log('Applying updates to pet profile:', updates);
