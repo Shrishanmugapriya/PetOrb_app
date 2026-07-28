@@ -13,7 +13,7 @@ ANDROID_CAPABILITIES = {
     "platformName": "Android",
     "automationName": "UiAutomator2",
     "deviceName": "Android Emulator",
-    "appPackage": "com.example.petorb_app",
+    "appPackage": "com.petorb.petorb_app",
     "appActivity": ".MainActivity",
     "noReset": False,
     "fullReset": False,
