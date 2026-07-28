@@ -25,12 +25,42 @@ const verifyPassword = (password, storedHash) => {
   return hash === originalHash;
 };
 
+// Password format validation helper
+const validatePasswordFormat = (password) => {
+  if (!password || password.length < 6) {
+    return 'Password must be at least 6 characters long.';
+  }
+  if (/^[^a-zA-Z]/.test(password)) {
+    return 'Password must start with a letter (cannot start with a number or special character).';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must contain at least one uppercase letter (A-Z).';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Password must contain at least one lowercase letter (a-z).';
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Password must contain at least one number (0-9).';
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return 'Password must contain at least one special character (!@#$%^&*).';
+  }
+  return null;
+};
+
 exports.register = async (req, res) => {
   try {
     const { uid, name, email, password, role, phone, photo } = req.body;
 
     if (!name || !email || !role) {
       return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    if (password) {
+      const pwdError = validatePasswordFormat(password);
+      if (pwdError) {
+        return res.status(400).json({ message: pwdError });
+      }
     }
 
     const effectiveUid = uid || `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;

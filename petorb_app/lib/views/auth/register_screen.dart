@@ -347,7 +347,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             validator: (val) {
                               if (val == null || val.isEmpty) return 'Password is required';
-                              if (val.length < 6) return 'Password must be at least 6 characters';
+                              if (val.length < 6) return 'Password must be at least 6 characters long';
+                              if (RegExp(r'^[^a-zA-Z]').hasMatch(val)) {
+                                return 'Password must start with a letter (cannot start with numbers or special characters)';
+                              }
+                              if (!RegExp(r'[A-Z]').hasMatch(val)) {
+                                return 'Password must contain at least one uppercase letter (A-Z)';
+                              }
+                              if (!RegExp(r'[a-z]').hasMatch(val)) {
+                                return 'Password must contain at least one lowercase letter (a-z)';
+                              }
+                              if (!RegExp(r'[0-9]').hasMatch(val)) {
+                                return 'Password must contain at least one number (0-9)';
+                              }
+                              if (!RegExp(r'[!@#$%^&*()_+\-=\[\]{};期:"\\|,.<>\/?]').hasMatch(val)) {
+                                return 'Password must contain at least one special character (!@#$%^&*)';
+                              }
                               return null;
                             },
                           ),
