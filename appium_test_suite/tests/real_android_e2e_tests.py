@@ -21,6 +21,7 @@ class RealAndroidE2ETestSuite:
 
     def execute_test(self, test_id, module, title, category, log_msg=""):
         start_time = time.time()
+        time.sleep(0.1) # Smooth pacing for live phone screen demonstration
         status = "PASS"
         log_output = log_msg if log_msg else f"Executed {title} successfully on connected Samsung SM-A356E device."
         stack_trace = ""
