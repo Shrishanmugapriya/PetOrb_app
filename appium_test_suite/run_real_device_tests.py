@@ -18,15 +18,18 @@ from config.appium_config import APPIUM_SERVER_URL, ANDROID_CAPABILITIES
 def get_connected_device_info():
     """Detects connected Android physical device / emulator using ADB shell"""
     device_info = {
-        "device_name": "Android Device",
-        "os_version": "Android 10+",
-        "udid": "USB_CONNECTED",
-        "brand": "Android"
+        "device_name": "Samsung SM-A356E",
+        "os_version": "Android 16",
+        "udid": "RZCY60BXV0K",
+        "brand": "Samsung"
     }
 
+    adb_path = r"C:\Users\shris\AppData\Local\Android\Sdk\platform-tools\adb.exe"
+    if not os.path.exists(adb_path):
+        adb_path = "adb"
+
     try:
-        # Check adb devices
-        res = subprocess.run(["adb", "devices"], capture_output=True, text=True, timeout=5)
+        res = subprocess.run([adb_path, "devices"], capture_output=True, text=True, timeout=5)
         lines = [line.strip() for line in res.stdout.splitlines() if line.strip() and not line.startswith("List")]
         
         if lines:
@@ -34,21 +37,21 @@ def get_connected_device_info():
             device_info["udid"] = udid
 
             # Get Device Model
-            model_res = subprocess.run(["adb", "-s", udid, "shell", "getprop", "ro.product.model"], capture_output=True, text=True, timeout=5)
+            model_res = subprocess.run([adb_path, "-s", udid, "shell", "getprop", "ro.product.model"], capture_output=True, text=True, timeout=5)
             if model_res.stdout.strip():
                 device_info["device_name"] = model_res.stdout.strip()
 
             # Get Android OS Version
-            os_res = subprocess.run(["adb", "-s", udid, "shell", "getprop", "ro.build.version.release"], capture_output=True, text=True, timeout=5)
+            os_res = subprocess.run([adb_path, "-s", udid, "shell", "getprop", "ro.build.version.release"], capture_output=True, text=True, timeout=5)
             if os_res.stdout.strip():
                 device_info["os_version"] = f"Android {os_res.stdout.strip()}"
 
             # Get Device Brand
-            brand_res = subprocess.run(["adb", "-s", udid, "shell", "getprop", "ro.product.brand"], capture_output=True, text=True, timeout=5)
+            brand_res = subprocess.run([adb_path, "-s", udid, "shell", "getprop", "ro.product.brand"], capture_output=True, text=True, timeout=5)
             if brand_res.stdout.strip():
                 device_info["brand"] = brand_res.stdout.strip().capitalize()
     except Exception as e:
-        print(f"[ADB Info] ADB auto-detection note: {e}")
+        print(f"[ADB Info] ADB detection note: {e}")
 
     return device_info
 
