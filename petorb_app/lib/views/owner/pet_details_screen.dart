@@ -330,7 +330,12 @@ class PetDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       const Text('Behavioral Characteristics:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primaryText)),
                       const SizedBox(height: 4),
-                      Text(pet.behaviourNotes.isEmpty ? 'None' : pet.behaviourNotes, style: const TextStyle(color: AppColors.secondaryText)),
+                      Text(
+                        pet.behaviourNotes.isNotEmpty 
+                            ? pet.behaviourNotes 
+                            : (pet.specialInstructions.isNotEmpty ? pet.specialInstructions : 'None'), 
+                        style: const TextStyle(color: AppColors.secondaryText),
+                      ),
                     ],
                   ),
 
