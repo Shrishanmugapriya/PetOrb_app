@@ -54,6 +54,7 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
     final jobProvider = Provider.of<JobProvider>(context);
 
     final name = userProvider.currentUser?.name ?? 'Sitter';
+    final photo = userProvider.currentUser?.photo ?? '';
     final hasProfileDetails = (userProvider.currentUser?.sitterProfile?.experience?.isNotEmpty ?? false) ||
                               ((userProvider.currentUser?.sitterProfile?.rate ?? 0) > 0);
     final exp = userProvider.currentUser?.sitterProfile?.experience ?? '';

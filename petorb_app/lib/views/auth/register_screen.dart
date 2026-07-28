@@ -361,7 +361,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return 'Password must contain at least one number (0-9)';
                               }
                               if (!RegExp(r'[!@#$%^&*()_+\-=\[\]{};期:"\\|,.<>\/?]').hasMatch(val)) {
-                                return 'Password must contain at least one special character (!@#$%^&*)';
+                                return 'Password must contain at least one special character (!@#\$%^&*)';
                               }
                               return null;
                             },
