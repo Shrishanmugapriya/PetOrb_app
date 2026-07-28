@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../models/pet_model.dart';
@@ -47,6 +49,72 @@ class _AddEditPetScreenState extends State<AddEditPetScreen> with SingleTickerPr
   List<Medication> _medications = [];
   List<FeedingScheduleItem> _feedingSchedule = [];
   List<EmergencyContact> _emergencyContacts = [];
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final base64Image = 'data:image/png;base64,${base64Encode(bytes)}';
+        setState(() {
+          _photoController.text = base64Image;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to select image: $e'), backgroundColor: AppColors.danger),
+        );
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Select Pet Photo Source', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primaryText)),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primaryBrand),
+                title: const Text('Upload PNG / JPG File from Device', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Select photo file from gallery or storage', style: TextStyle(fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primaryBrand),
+                title: const Text('Capture Live Camera Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Take a photo using live camera', style: TextStyle(fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   bool get isEdit => widget.pet != null;
 
@@ -311,12 +379,102 @@ class _AddEditPetScreenState extends State<AddEditPetScreen> with SingleTickerPr
                             keyboardType: TextInputType.number,
                             validator: (v) => v == null || v.isEmpty ? 'Weight required' : null,
                           ),
-                          _buildTextField(
-                            controller: _photoController,
-                            label: 'Photo Image URL',
-                            hint: 'e.g. https://images.unsplash.com/photo-...',
-                            prefixIcon: Icons.image_outlined,
+                          // Interactive Pet Photo Selector (PNG file upload / Live camera capture)
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Pet Photo Image *',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryText, fontSize: 13),
+                            ),
                           ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _showImageSourceDialog,
+                            child: Container(
+                              height: 140,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgLavenderWhite.withOpacity(0.6),
+                                borderRadius: AppStyles.cardsBorderRadius,
+                                border: Border.all(color: AppColors.primaryBrand.withOpacity(0.3), width: 1.5),
+                              ),
+                              child: _photoController.text.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: AppStyles.cardsBorderRadius,
+                                      child: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: _photoController.text.startsWith('data:image')
+                                                ? Image.memory(
+                                                    base64Decode(_photoController.text.split(',').last),
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : Image.network(
+                                                    _photoController.text,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.pets, size: 40, color: AppColors.primaryBrand)),
+                                                  ),
+                                          ),
+                                          Positioned(
+                                            right: 8,
+                                            bottom: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withOpacity(0.65),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.edit, color: Colors.white, size: 14),
+                                                  SizedBox(width: 4),
+                                                  Text('Change Photo', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            ElevatedButton.icon(
+                                              onPressed: () => _pickImage(ImageSource.gallery),
+                                              icon: const Icon(Icons.upload_file_rounded, size: 18),
+                                              label: const Text('Upload PNG File'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColors.primaryBrand,
+                                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            OutlinedButton.icon(
+                                              onPressed: () => _pickImage(ImageSource.camera),
+                                              icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                                              label: const Text('Live Camera'),
+                                              style: OutlinedButton.styleFrom(
+                                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 10),
+                                        const Text(
+                                          'Upload a PNG/JPG photo file or take a live picture',
+                                          style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
