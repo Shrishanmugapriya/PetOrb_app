@@ -8,6 +8,13 @@ import sys
 import subprocess
 import time
 
+# Set Android SDK path for Appium UiAutomator2 driver
+os.environ["ANDROID_HOME"] = r"C:\Users\shris\AppData\Local\Android\Sdk"
+os.environ["ANDROID_SDK_ROOT"] = r"C:\Users\shris\AppData\Local\Android\Sdk"
+platform_tools = r"C:\Users\shris\AppData\Local\Android\Sdk\platform-tools"
+if platform_tools not in os.environ["PATH"]:
+    os.environ["PATH"] = platform_tools + os.pathsep + os.environ["PATH"]
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils.html_reporter import AppiumHtmlReporter

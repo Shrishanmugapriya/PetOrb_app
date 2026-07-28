@@ -12,11 +12,11 @@ BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "https://petorb.onrender.com
 ANDROID_CAPABILITIES = {
     "platformName": "Android",
     "automationName": "UiAutomator2",
-    "deviceName": "Android Emulator",
+    "deviceName": "Samsung SM-A356E",
+    "udid": "RZCY60BXV0K",
     "appPackage": "com.petorb.petorb_app",
     "appActivity": ".MainActivity",
-    "noReset": False,
-    "fullReset": False,
+    "noReset": True,
     "newCommandTimeout": 300,
 }
 
