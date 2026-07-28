@@ -6,12 +6,12 @@ import os
 
 TARGET_WEB_URL = os.environ.get("TARGET_WEB_URL", "http://localhost:8080")
 BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "https://petorb.onrender.com/api")
-BROWSER_NAME = "Chrome (Headless)"
+BROWSER_NAME = "Google Chrome (Interactive GUI)"
 
 CHROME_OPTIONS = [
-    "--headless",
+    "--start-maximized",
+    "--window-size=1366,768",
     "--disable-gpu",
-    "--window-size=1280,800",
     "--no-sandbox",
     "--disable-dev-shm-usage"
 ]

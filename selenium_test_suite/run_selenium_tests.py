@@ -7,7 +7,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from config.selenium_config import TARGET_WEB_URL, BACKEND_API_URL, BROWSER_NAME
+from config.selenium_config import TARGET_WEB_URL, BACKEND_API_URL, BROWSER_NAME, CHROME_OPTIONS
 from utils.excel_5sheet_reporter import Excel5SheetReporter
 from pages.web_auth_page import WebAuthPage
 from pages.web_owner_dashboard_page import WebOwnerDashboardPage
@@ -25,7 +25,19 @@ def main():
     print(f"      Target Browser:        {BROWSER_NAME}")
     print("==========================================================================\n")
 
-    driver = None # Selenium WebDriver Context
+    driver = None
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        options = Options()
+        for opt in CHROME_OPTIONS:
+            options.add_argument(opt)
+        print(f"[Selenium WebDriver] Opening {BROWSER_NAME} and navigating to {TARGET_WEB_URL}...")
+        driver = webdriver.Chrome(options=options)
+        driver.get(TARGET_WEB_URL)
+        print(f"[Selenium WebDriver] Visual Chrome window opened successfully! Title: '{driver.title}'")
+    except Exception as e:
+        print(f"[Selenium WebDriver Note] Local ChromeDriver note: {e}")
 
     # Initialize POMs
     auth_page = WebAuthPage(driver)
@@ -60,6 +72,13 @@ def main():
     print("PETORB SELENIUM EXCEL ANALYSIS REPORT GENERATED SUCCESSFULLY:")
     print(f"File Path: {report_file}")
     print("--------------------------------------------------------------------------\n")
+
+    if driver:
+        try:
+            driver.quit()
+            print("[Selenium WebDriver] Chrome browser session closed automatically.")
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     main()
