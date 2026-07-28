@@ -28,52 +28,15 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
   final List<String> _titles = ['Dashboard', 'Browse Jobs', 'Settings'];
 
   // 8. Notification Center alert stream for sitters
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'title': 'Job Application Approved!',
-      'body': 'Your application for "Milo Weekend Care" was accepted.',
-      'time': '10m ago',
-      'icon': Icons.check_circle_outline,
-      'color': AppColors.success
-    },
-    {
-      'title': 'New Message from Owner',
-      'body': 'Priya: "Please feed Milo at 5 PM sharp"',
-      'time': '1h ago',
-      'icon': Icons.chat_bubble_outline,
-      'color': AppColors.primaryBrand
-    },
-    {
-      'title': 'Care Reminder',
-      'body': 'Milo needs Walk (30 min) scheduled in 2h',
-      'time': '2h ago',
-      'icon': Icons.alarm,
-      'color': AppColors.warning
-    },
-  ];
+  final List<Map<String, dynamic>> _notifications = [];
 
   // 9. Sitting History logs
-  final List<Map<String, dynamic>> _sittingHistory = [
-    {
-      'petName': 'Bella',
-      'ownerName': 'Shreya',
-      'duration': '3 days',
-      'rating': 5.0,
-      'feedback': 'Excellent care! Bella loved him.'
-    },
-    {
-      'petName': 'Leo',
-      'ownerName': 'Amit',
-      'duration': '1 day',
-      'rating': 4.5,
-      'feedback': 'Very professional sitter, recommended.'
-    }
-  ];
+  final List<Map<String, dynamic>> _sittingHistory = [];
 
   // 10. Sitter skills, availability, hourly rates
-  final List<String> _skills = ['CPR Certified', 'Oral Medication', 'Behavior Training', 'Senior Pet Care'];
+  final List<String> _skills = [];
   bool _availableNow = true;
-  final String _certifications = 'NDG Pet Sitter Certification #10292';
+  final String _certifications = '';
 
   @override
   void initState() {
@@ -487,9 +450,9 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildAppStat('PENDING', '1', AppColors.warning),
-                      _buildAppStat('ACCEPTED', '1', AppColors.success),
-                      _buildAppStat('REJECTED', '0', AppColors.danger),
+                      _buildAppStat('PENDING', '0', AppColors.warning),
+                      _buildAppStat('ACCEPTED', '${jobProvider.assignedJobs.where((j) => j.status == "accepted" || j.status == "assigned").length}', AppColors.success),
+                      _buildAppStat('COMPLETED', '${jobProvider.assignedJobs.where((j) => j.status == "completed").length}', AppColors.primaryBrand),
                     ],
                   ),
                 ],
@@ -511,44 +474,57 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
                 children: [
                   const Text('Notifications & Reminders', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryText)),
                   const Divider(height: 16),
-                  Column(
-                    children: [
-                      ...jobProvider.assignedJobs
-                          .where((j) => j.status == 'completed')
-                          .map((job) => {
-                                'title': 'Sitting Job Completed! 🏁',
-                                'body': 'Your assignment for "${job.title}" is completed. Your access to the pet\'s files has expired.',
-                                'time': 'Just now',
-                                'icon': Icons.check_circle_outline,
-                                'color': AppColors.primaryBrand,
-                              }),
-                      ..._notifications,
-                    ].map<Widget>((notif) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: notif['color'].withOpacity(0.12), shape: BoxShape.circle),
-                              child: Icon(notif['icon'], color: notif['color'], size: 18),
+                  Builder(
+                    builder: (context) {
+                      final allNotifs = [
+                        ...jobProvider.assignedJobs
+                            .where((j) => j.status == 'completed')
+                            .map((job) => {
+                                  'title': 'Sitting Job Completed! 🏁',
+                                  'body': 'Your assignment for "${job.title}" is completed. Your access to the pet\'s files has expired.',
+                                  'time': 'Just now',
+                                  'icon': Icons.check_circle_outline,
+                                  'color': AppColors.primaryBrand,
+                                }),
+                        ..._notifications,
+                      ];
+
+                      if (allNotifs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('No new notifications or reminders.', style: TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                        );
+                      }
+
+                      return Column(
+                        children: allNotifs.map<Widget>((notif) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: notif['color'].withOpacity(0.12), shape: BoxShape.circle),
+                                  child: Icon(notif['icon'], color: notif['color'], size: 18),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(notif['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      Text(notif['body'], style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                                    ],
+                                  ),
+                                ),
+                                Text(notif['time'], style: const TextStyle(fontSize: 10, color: AppColors.hintText)),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(notif['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  Text(notif['body'], style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
-                                ],
-                              ),
-                            ),
-                            Text(notif['time'], style: const TextStyle(fontSize: 10, color: AppColors.hintText)),
-                          ],
-                        ),
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
+                    },
                   ),
                 ],
               ),
@@ -569,34 +545,39 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
                 children: [
                   const Text('My Sitting History & Ratings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryText)),
                   const Divider(height: 16),
-                  Column(
-                    children: combinedHistory.map((hist) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Cared for ${hist['petName']} (${hist['duration']})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.star, color: Colors.amber, size: 14),
-                                    const SizedBox(width: 2),
-                                    Text(hist['rating'].toString(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text('"${hist['feedback']}" - ${hist['ownerName']}', style: const TextStyle(fontSize: 11, color: AppColors.secondaryText, fontStyle: FontStyle.italic)),
-                            const Divider(height: 16),
-                          ],
+                  combinedHistory.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('No sitting history yet. Complete sitting assignments to earn ratings and reviews!', style: TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                        )
+                      : Column(
+                          children: combinedHistory.map((hist) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Cared for ${hist['petName']} (${hist['duration']})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star, color: Colors.amber, size: 14),
+                                          const SizedBox(width: 2),
+                                          Text(hist['rating'].toString(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text('"${hist['feedback']}" - ${hist['ownerName']}', style: const TextStyle(fontSize: 11, color: AppColors.secondaryText, fontStyle: FontStyle.italic)),
+                                  const Divider(height: 16),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ),
                 ],
               ),
             ),
@@ -631,20 +612,22 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
                   ),
                   Text('Availability Status: ${_availableNow ? "AVAILABLE NOW" : "BUSY"}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _availableNow ? AppColors.success : AppColors.danger)),
                   const SizedBox(height: 8),
-                  Text('Certifications: $_certifications', style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                  Text('Certifications: ${_certifications.isNotEmpty ? _certifications : "Not specified"}', style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
                   const Divider(height: 20),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: _skills.map((skill) {
-                      return Chip(
-                        label: Text(skill, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryBrand)),
-                        backgroundColor: AppColors.bgLavenderWhite,
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: AppColors.lightLavender)),
-                      );
-                    }).toList(),
-                  ),
+                  _skills.isEmpty
+                      ? const Text('No skills listed yet. Update your profile settings to add your skills.', style: TextStyle(fontSize: 11, color: AppColors.secondaryText))
+                      : Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: _skills.map((skill) {
+                            return Chip(
+                              label: Text(skill, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryBrand)),
+                              backgroundColor: AppColors.bgLavenderWhite,
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: AppColors.lightLavender)),
+                            );
+                          }).toList(),
+                        ),
                 ],
               ),
             ),
