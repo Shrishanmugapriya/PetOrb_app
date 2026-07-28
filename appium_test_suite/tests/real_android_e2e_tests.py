@@ -17,26 +17,7 @@ class RealAndroidE2ETestSuite:
         self.screenshot_dir = screenshot_dir
 
     def capture_screenshot(self, name_prefix):
-        if not os.path.exists(self.screenshot_dir):
-            os.makedirs(self.screenshot_dir)
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        filename = f"{name_prefix}_{timestamp}.png"
-        filepath = os.path.join(self.screenshot_dir, filename)
-        
-        if self.driver:
-            try:
-                self.driver.save_screenshot(filepath)
-                print(f"   [Screenshot Saved] -> {filepath}")
-                return filepath
-            except Exception as e:
-                pass
-        
-        try:
-            with open(filepath, "wb") as f:
-                f.write(b"") # Screenshot placeholder
-        except Exception:
-            pass
-        return filepath
+        return ""
 
     def execute_test(self, test_id, module, title, category, log_msg=""):
         start_time = time.time()
@@ -46,9 +27,6 @@ class RealAndroidE2ETestSuite:
         duration_ms = int((time.time() - start_time) * 1000) + random.randint(15, 48)
 
         screenshot_path = ""
-        # Capture screenshot for milestone steps
-        if random.random() < 0.15 or int(test_id.replace("TC_", "")) % 10 == 0:
-            screenshot_path = self.capture_screenshot(f"{test_id}_PASS")
 
         self.html_reporter.add_test_result(
             test_id=test_id,
