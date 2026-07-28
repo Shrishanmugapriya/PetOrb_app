@@ -91,10 +91,20 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
     final jobProvider = Provider.of<JobProvider>(context);
 
     final name = userProvider.currentUser?.name ?? 'Sitter';
-    final photo = userProvider.currentUser?.photo ?? '';
-    final exp = userProvider.currentUser?.sitterProfile?.experience ?? '2+ Years';
-    final rate = userProvider.currentUser?.sitterProfile?.rate ?? 300.0;
+    final hasProfileDetails = (userProvider.currentUser?.sitterProfile?.experience?.isNotEmpty ?? false) ||
+                              ((userProvider.currentUser?.sitterProfile?.rate ?? 0) > 0);
+    final exp = userProvider.currentUser?.sitterProfile?.experience ?? '';
+    final rate = userProvider.currentUser?.sitterProfile?.rate ?? 0.0;
+    final profileSubStr = hasProfileDetails
+        ? 'Experience: ${exp.isNotEmpty ? exp : 'Not set'} • Rate: ₹${rate > 0 ? rate.toStringAsFixed(0) : '0'}/hr'
+        : 'Update profile to add experience & rate';
+
     final totalAssignedPets = petProvider.pets.length;
+    final isNewUser = totalAssignedPets == 0 && (jobProvider.assignedJobs.isEmpty);
+    final welcomeTitle = isNewUser ? 'Welcome to PetOrb, $name! 🙋‍♂️' : 'Welcome back, $name! 🙋‍♂️';
+    final welcomeSubText = isNewUser
+        ? 'Explore open sitting jobs in your area to get started.'
+        : 'You are currently assigned to $totalAssignedPets ${totalAssignedPets == 1 ? 'pet' : 'pets'}.';
 
     // Combine completed jobs and static sitting history
     final completedJobs = jobProvider.assignedJobs.where((j) => j.status == 'completed').toList();
@@ -152,17 +162,17 @@ class _SitterDashboardScreenState extends State<SitterDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hi, $name! 🙋‍♂️',
+                              welcomeTitle,
                               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Experience: $exp • Rate: ₹${rate.toStringAsFixed(0)}/hr',
+                              profileSubStr,
                               style: const TextStyle(fontSize: 11, color: AppColors.lightLavender, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Welcome back! You are currently assigned to $totalAssignedPets ${totalAssignedPets == 1 ? 'pet' : 'pets'}.',
+                              welcomeSubText,
                               style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
                             ),
                           ],

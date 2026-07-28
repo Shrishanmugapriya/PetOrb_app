@@ -104,6 +104,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     final totalPets = petProvider.pets.length;
     final userPhoto = userProvider.currentUser?.photo ?? '';
 
+    final isNewUser = totalPets == 0;
+    final welcomeTitle = isNewUser ? 'Welcome to PetOrb, $name! 👋' : 'Welcome back, $name! 👋';
+    final welcomeSub = isNewUser
+        ? 'Create your first pet profile to unlock AI assistant prompts.'
+        : 'You have $totalPets ${totalPets == 1 ? 'pet' : 'pets'} under your care.';
+
     return RefreshIndicator(
       onRefresh: () async {
         await petProvider.fetchPets();
@@ -143,12 +149,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Welcome back, $name! 👋',
+                              welcomeTitle,
                               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'You have $totalPets ${totalPets == 1 ? 'pet' : 'pets'} under your care.',
+                              welcomeSub,
                               style: const TextStyle(fontSize: 13, color: AppColors.lightLavender, fontWeight: FontWeight.w600),
                             ),
                           ],
