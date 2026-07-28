@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../models/pet_model.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/pet_provider.dart';
 
 class OwnerAiAssistantScreen extends StatefulWidget {
   final PetModel pet;
@@ -25,8 +26,14 @@ class _OwnerAiAssistantScreenState extends State<OwnerAiAssistantScreen> {
   }
 
   void _handleSendPressed(types.PartialText message) {
-    Provider.of<ChatProvider>(context, listen: false)
-        .sendMessage(widget.pet.id, message.text);
+    final petProvider = Provider.of<PetProvider>(context, listen: false);
+    Provider.of<ChatProvider>(context, listen: false).sendMessage(
+      widget.pet.id,
+      message.text,
+      onProfileUpdated: () {
+        petProvider.fetchPets();
+      },
+    );
   }
 
   @override

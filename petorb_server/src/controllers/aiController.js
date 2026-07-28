@@ -48,22 +48,30 @@ ${JSON.stringify({
   allergies: currentAllergies,
   currentMedications: currentMedications,
   specialInstructions: pet.specialInstructions,
-  vetInfo: currentVet
+  vetInfo: currentVet,
+  foodPreferences: pet.foodPreferences || [],
+  sleepSchedule: pet.sleepSchedule || '',
+  activityRoutine: pet.activityRoutine || '',
+  behaviourNotes: pet.behaviourNotes || ''
 }, null, 2)}
 
 User's message: "${question}"
 AI's response: "${reply}"
 
-If the Owner explicitly stated new details, output a JSON object containing ONLY the fields to update. Do not modify fields that were not mentioned or changed.
+If the Owner explicitly stated new details or behavioral notes, output a JSON object containing ONLY the fields to update. Do not modify fields that were not mentioned or changed.
 Allowed update fields and formats:
 {
   "age": Number,
   "weight": Number,
   "breed": String,
-  "allergies": [String], (list any new allergies to add, e.g. ["Chicken"])
-  "currentMedications": [{"name": String, "dosage": String, "frequency": String}], (list medications)
+  "allergies": [String],
+  "currentMedications": [{"name": String, "dosage": String, "frequency": String}],
   "specialInstructions": String,
-  "vetInfo": {"name": String, "phone": String, "address": String}
+  "vetInfo": {"name": String, "phone": String, "address": String},
+  "foodPreferences": [String],
+  "sleepSchedule": String,
+  "activityRoutine": String,
+  "behaviourNotes": String
 }
 
 If no profile updates are stated or if the user is asking a question rather than stating a new profile fact to remember, output exactly: {"hasUpdates": false}
@@ -104,6 +112,24 @@ Do not explain your reasoning. Output valid JSON only, starting with "{" and end
       }
       if (updates.specialInstructions !== undefined && updates.specialInstructions !== pet.specialInstructions) {
         pet.specialInstructions = updates.specialInstructions;
+        modified = true;
+      }
+      if (updates.behaviourNotes !== undefined && updates.behaviourNotes !== pet.behaviourNotes) {
+        pet.behaviourNotes = updates.behaviourNotes;
+        modified = true;
+      }
+      if (updates.sleepSchedule !== undefined && updates.sleepSchedule !== pet.sleepSchedule) {
+        pet.sleepSchedule = updates.sleepSchedule;
+        modified = true;
+      }
+      if (updates.activityRoutine !== undefined && updates.activityRoutine !== pet.activityRoutine) {
+        pet.activityRoutine = updates.activityRoutine;
+        modified = true;
+      }
+
+      if (updates.foodPreferences !== undefined && Array.isArray(updates.foodPreferences)) {
+        const uniquePrefs = new Set([...(pet.foodPreferences || []), ...updates.foodPreferences]);
+        pet.foodPreferences = Array.from(uniquePrefs);
         modified = true;
       }
       

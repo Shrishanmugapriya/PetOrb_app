@@ -50,7 +50,7 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> sendMessage(String petId, String content) async {
+  Future<void> sendMessage(String petId, String content, {VoidCallback? onProfileUpdated}) async {
     // Add user message immediately to the UI
     final userMessage = types.TextMessage(
       author: const types.User(id: 'user', firstName: 'You'),
@@ -72,7 +72,12 @@ class ChatProvider extends ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final String reply = data['reply'] ?? 'Empty response';
+        final bool updatedProfile = data['updatedProfile'] == true || reply.contains('System Alert');
         
+        if (updatedProfile && onProfileUpdated != null) {
+          onProfileUpdated();
+        }
+
         final aiMessage = types.TextMessage(
           author: const types.User(
             id: 'ai',
