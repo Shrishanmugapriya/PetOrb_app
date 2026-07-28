@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
@@ -8,23 +9,44 @@ const signToken = (uid) => {
   });
 };
 
+// Password hashing helper using native Node.js crypto
+const hashPassword = (password) => {
+  if (!password) return '';
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+};
+
+// Password verification helper
+const verifyPassword = (password, storedHash) => {
+  if (!storedHash || !storedHash.includes(':')) return false;
+  const [salt, originalHash] = storedHash.split(':');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return hash === originalHash;
+};
+
 exports.register = async (req, res) => {
   try {
-    const { uid, name, email, role, phone, photo } = req.body;
+    const { uid, name, email, password, role, phone, photo } = req.body;
 
-    if (!uid || !name || !email || !role) {
+    if (!name || !email || !role) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    let user = await User.findOne({ uid });
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+    const effectiveUid = uid || `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    let existingUser = await User.findOne({ $or: [{ uid: effectiveUid }, { email: email.toLowerCase() }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'An account with this email already exists. Please sign in.' });
     }
 
-    user = new User({
-      uid,
+    const hashedPassword = password ? hashPassword(password) : '';
+
+    const user = new User({
+      uid: effectiveUid,
       name,
-      email,
+      email: email.toLowerCase(),
+      password: hashedPassword,
       role,
       phone: phone || '',
       photo: photo || ''
@@ -52,15 +74,26 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { uid } = req.body;
+    const { uid, email, password } = req.body;
 
-    if (!uid) {
-      return res.status(400).json({ message: 'Please provide User UID' });
+    let user = null;
+
+    if (email) {
+      user = await User.findOne({ email: email.toLowerCase() });
+    } else if (uid) {
+      user = await User.findOne({ uid });
     }
 
-    const user = await User.findOne({ uid });
     if (!user) {
-      return res.status(404).json({ message: 'User profile not found. Please register first.' });
+      return res.status(404).json({ message: 'Account not found. Please sign up first.' });
+    }
+
+    // If password is provided, verify it against stored hash
+    if (password && user.password) {
+      const isValid = verifyPassword(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({ message: 'Incorrect password. Please try again.' });
+      }
     }
 
     const token = signToken(user.uid);
@@ -100,7 +133,7 @@ exports.updateProfile = async (req, res) => {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (photo) user.photo = photo;
-    
+
     if (user.role === 'sitter' && sitterProfile) {
       user.sitterProfile = {
         ...user.sitterProfile,

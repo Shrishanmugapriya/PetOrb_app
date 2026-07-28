@@ -54,6 +54,7 @@ class AuthService {
       'uid': uid,
       'name': name,
       'email': email,
+      'password': password,
       'role': role,
       'phone': phone,
       'photo': 'https://api.dicebear.com/7.x/adventurer/png?seed=$name',
@@ -74,7 +75,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    String uid;
+    String? uid;
 
     if (isFirebaseAvailable) {
       try {
@@ -84,28 +85,21 @@ class AuthService {
         );
         uid = credential.user!.uid;
       } catch (e) {
-        throw Exception("Firebase Sign In Failed: $e");
+        throw Exception(e.toString().replaceAll("Exception: ", ""));
       }
-    } else {
-      // Fallback: Generate developer UID
-      uid = 'dev_uid_${email.replaceAll('@', '_').replaceAll('.', '_')}';
     }
 
     // Log in on backend
-    final response = await ApiService.post('/auth/login', {'uid': uid});
+    final response = await ApiService.post('/auth/login', {
+      'email': email,
+      'password': password,
+      if (uid != null) 'uid': uid,
+    });
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       await ApiService.setToken(data['token']);
       return UserModel.fromJson(data['user']);
-    } else if (response.statusCode == 404 && !isFirebaseAvailable) {
-      // For developer demo, if the user doesn't exist, we auto-register them
-      return await signUp(
-        name: email.split('@')[0],
-        email: email,
-        password: password,
-        role: 'owner', // Default to owner
-      );
     } else {
       final err = jsonDecode(response.body);
       throw Exception(err['message'] ?? 'Authentication failed.');

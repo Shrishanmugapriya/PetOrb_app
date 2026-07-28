@@ -4,10 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // CHANGE THIS to your PC's local IP address (e.g. 192.168.1.15) if deploying to a physical mobile phone
+  // Set to true to use live Render server, or false for local server
+  static const bool useLiveProductionServer = true;
+  static const String liveProductionUrl = 'https://petorb.onrender.com/api';
   static const String localComputerIp = '192.168.1.2';
 
   static String get baseUrl {
+    if (useLiveProductionServer) {
+      return liveProductionUrl;
+    }
     if (kIsWeb) {
       return 'http://localhost:5000/api';
     } else if (defaultTargetPlatform == TargetPlatform.windows ||
