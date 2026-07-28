@@ -29,15 +29,18 @@ def main():
     try:
         from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.chrome.service import Service
+        from webdriver_manager.chrome import ChromeDriverManager
         options = Options()
         for opt in CHROME_OPTIONS:
             options.add_argument(opt)
-        print(f"[Selenium WebDriver] Opening {BROWSER_NAME} and navigating to {TARGET_WEB_URL}...")
-        driver = webdriver.Chrome(options=options)
+        print(f"[Selenium WebDriver] Downloading/Verifying ChromeDriver & Opening {BROWSER_NAME}...")
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
         driver.get(TARGET_WEB_URL)
         print(f"[Selenium WebDriver] Visual Chrome window opened successfully! Title: '{driver.title}'")
     except Exception as e:
-        print(f"[Selenium WebDriver Note] Local ChromeDriver note: {e}")
+        print(f"[Selenium WebDriver Note] ChromeDriver launch details: {e}")
 
     # Initialize POMs
     auth_page = WebAuthPage(driver)
