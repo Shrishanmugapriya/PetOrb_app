@@ -1,0 +1,22 @@
+{
+  "name": "petorb-monorepo",
+  "version": "1.0.0",
+  "description": "PetOrb AI Ecosystem Backend",
+  "main": "petorb_server/src/server.js",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd petorb_server && npm install",
+    "start": "node petorb_server/src/server.js",
+    "dev": "node petorb_server/src/server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.1"
+  }
+}
