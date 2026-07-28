@@ -39,30 +39,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     'Grooming / Brush Coat': false,
   };
 
-  // 8. Simulated notifications center
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'title': 'New application received',
-      'body': 'Sitter Rahul applied for your job "Weekend Care"',
-      'time': '5m ago',
-      'icon': Icons.assignment_ind_outlined,
-      'color': AppColors.primaryBrand
-    },
-    {
-      'title': 'Vaccination Alert',
-      'body': 'Rabies booster due next week',
-      'time': '2h ago',
-      'icon': Icons.vaccines_outlined,
-      'color': AppColors.danger
-    },
-    {
-      'title': 'QR Access Checked',
-      'body': 'Access QR scanned by Sitter Priya',
-      'time': '1d ago',
-      'icon': Icons.qr_code_scanner_rounded,
-      'color': AppColors.success
-    },
-  ];
+  // 8. Notifications center
+  final List<Map<String, dynamic>> _notifications = [];
 
   @override
   void initState() {
@@ -644,44 +622,57 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 children: [
                   const Text('Notifications & Alerts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryText)),
                   const Divider(height: 16),
-                  Column(
-                    children: [
-                      ...jobProvider.jobs
-                          .where((j) => j.status == 'completed')
-                          .map((job) => {
-                                'title': 'Sitting Job Completed! 🏁',
-                                'body': 'Your job "${job.title}" is completed. Sitter QR and AI access has been revoked.',
-                                'time': 'Just now',
-                                'icon': Icons.done_all_rounded,
-                                'color': AppColors.primaryBrand,
-                              }),
-                      ..._notifications,
-                    ].map<Widget>((notif) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: notif['color'].withOpacity(0.12), shape: BoxShape.circle),
-                              child: Icon(notif['icon'], color: notif['color'], size: 18),
+                  Builder(
+                    builder: (context) {
+                      final allNotifs = [
+                        ...jobProvider.jobs
+                            .where((j) => j.status == 'completed')
+                            .map((job) => {
+                                  'title': 'Sitting Job Completed! 🏁',
+                                  'body': 'Your job "${job.title}" is completed. Sitter QR and AI access has been revoked.',
+                                  'time': 'Just now',
+                                  'icon': Icons.done_all_rounded,
+                                  'color': AppColors.primaryBrand,
+                                }),
+                        ..._notifications,
+                      ];
+
+                      if (allNotifs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('No new notifications or alerts.', style: TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                        );
+                      }
+
+                      return Column(
+                        children: allNotifs.map<Widget>((notif) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: notif['color'].withOpacity(0.12), shape: BoxShape.circle),
+                                  child: Icon(notif['icon'], color: notif['color'], size: 18),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(notif['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      Text(notif['body'], style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+                                    ],
+                                  ),
+                                ),
+                                Text(notif['time'], style: const TextStyle(fontSize: 10, color: AppColors.hintText)),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(notif['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  Text(notif['body'], style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
-                                ],
-                              ),
-                            ),
-                            Text(notif['time'], style: const TextStyle(fontSize: 10, color: AppColors.hintText)),
-                          ],
-                        ),
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
+                    },
                   ),
                 ],
               ),
