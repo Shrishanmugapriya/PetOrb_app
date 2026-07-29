@@ -23,13 +23,15 @@ app.set('views', path.join(__dirname, 'views'));
 // Mount routes
 app.use('/api', apiRoutes);
 
+// Serve static Flutter Web App build
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Health check / welcome route
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({
     message: 'Welcome to the PetOrb AI Ecosystem API Server',
     status: 'online',
-    version: '1.0.0',
-    documentation: 'See Flutter client source or API specs for details'
+    version: '1.0.0'
   });
 });
 
