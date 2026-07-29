@@ -1,0 +1,48 @@
+name: Selenium 4.x Web E2E Automation Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  web-selenium-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install Selenium & Report Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium webdriver-manager openpyxl requests pytest
+
+      - name: Ensure Reports Directory Exists
+        run: mkdir -p selenium_test_suite/TestReports
+
+      - name: Run Selenium Web E2E Test Suite
+        env:
+          TARGET_WEB_URL: "https://petorb.onrender.com"
+          BACKEND_API_URL: "https://petorb.onrender.com/api"
+        run: |
+          python selenium_test_suite/run_selenium_tests.py
+
+      - name: Upload Selenium Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-web-test-reports
+          path: selenium_test_suite/TestReports/
+          if-no-files-found: ignore
