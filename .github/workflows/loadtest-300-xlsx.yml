@@ -1,0 +1,74 @@
+name: PetOrb 300+ Load Test & XLSX Report Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Target Environment'
+        required: true
+        default: 'local_server'
+        type: choice
+        options:
+          - 'local_server'
+          - 'production_render'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-300-loadtests-and-generate-xlsx:
+    name: Execute 300+ Load Test Scenarios & Export 5-Sheet XLSX Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Monorepo Server Dependencies
+        run: |
+          npm install
+
+      - name: Start PetOrb API Server in Background
+        env:
+          PORT: 5000
+          NODE_ENV: test
+        run: |
+          npm start &
+          echo "Waiting for PetOrb API server to start on port 5000..."
+          sleep 5
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:5000/health || echo "Server starting pulse..."
+
+      - name: Setup Python 3.11 Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Load Test & OpenPyXL Excel Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests
+
+      - name: Ensure Reports Directory Exists
+        run: |
+          mkdir -p loadtest_suite/reports
+
+      - name: Execute 300+ Unique Load Test Cases Suite
+        env:
+          TARGET_API_URL: "http://localhost:5000/api"
+          HEALTH_CHECK_URL: "http://localhost:5000/health"
+        run: |
+          python loadtest_suite/run_loadtest_300.py
+
+      - name: Upload 5-Sheet Excel (.xlsx) Report as Workflow Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PetOrb_LoadTest_300_Report_XLSX
+          path: loadtest_suite/reports/PetOrb_LoadTest_300_Report.xlsx
+          if-no-files-found: error
