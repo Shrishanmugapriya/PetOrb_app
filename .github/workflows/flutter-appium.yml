@@ -45,15 +45,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            echo "=== Android AVD initialized successfully ==="
-            python -m pip install --upgrade pip
-            if [ -f appium_test_suite/requirements.txt ]; then
-              pip install -r appium_test_suite/requirements.txt
-            fi
-            if [ -f appium_test_suite/run_tests.py ]; then
-              python appium_test_suite/run_tests.py
-            fi
+          script: bash .github/scripts/run_appium_tests.sh
 
       - name: Upload E2E Test Artifacts & Reports
         if: always()
