@@ -1,0 +1,13 @@
+# Ignore Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+
+# Ignore Flutter / Android build outputs
+petorb_app/build/
+petorb_app/android/build/
+petorb_app/.dart_tool/
+
+# Ignore temporary zip build outputs
+**/zipped_artifact/

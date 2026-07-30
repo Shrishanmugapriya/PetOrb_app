@@ -1,0 +1,247 @@
+name: Unified Automated Multi-Suite E2E & Security Testing Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # =========================================================================
+  # JOB 1: APPIUM MOBILE E2E TEST SUITE (300 TEST CASES)
+  # =========================================================================
+  appium-mobile-tests:
+    name: Appium Mobile E2E Suite (300 Test Cases)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Enable KVM group permissions for Android Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ensure Android Home & Output Directory Exist
+        run: |
+          mkdir -p ~/.android
+          mkdir -p appium_test_suite/reports appium_test_suite/zipped_artifact
+
+      - name: Run Appium & Android Emulator E2E Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash .github/scripts/run_appium_tests.sh
+
+      - name: Compress Excel Report into ZIP Folder
+        if: always()
+        run: |
+          cd appium_test_suite/reports
+          zip -r ../zipped_artifact/appium-test-suite-reports.zip . -i "*.xlsx" "*.html"
+
+      - name: Upload Zipped Appium Excel Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-test-suite-reports
+          path: appium_test_suite/zipped_artifact/appium-test-suite-reports.zip
+          if-no-files-found: warn
+
+  # =========================================================================
+  # JOB 2: SELENIUM WEB E2E TEST SUITE (300 TEST CASES)
+  # =========================================================================
+  selenium-web-tests:
+    name: Selenium Web E2E Suite (300 Test Cases)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium webdriver-manager openpyxl requests pytest
+
+      - name: Ensure Reports Directory Exists
+        run: mkdir -p selenium_test_suite/TestReports selenium_test_suite/zipped_artifact
+
+      - name: Run Selenium Web E2E Test Suite
+        env:
+          TARGET_WEB_URL: "https://petorb.onrender.com"
+          BACKEND_API_URL: "https://petorb.onrender.com/api"
+        run: |
+          python selenium_test_suite/run_selenium_tests.py
+
+      - name: Compress Excel Report into ZIP Folder
+        if: always()
+        run: |
+          cd selenium_test_suite/TestReports
+          zip -r ../zipped_artifact/selenium-test-suite-reports.zip . -i "*.xlsx"
+
+      - name: Upload Zipped Selenium Excel Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-suite-reports
+          path: selenium_test_suite/zipped_artifact/selenium-test-suite-reports.zip
+          if-no-files-found: warn
+
+  # =========================================================================
+  # JOB 3: FIELD VALIDATION TEST SUITE (300 TEST CASES)
+  # =========================================================================
+  field-validation-tests:
+    name: Field Validation Suite (300 Test Cases)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests
+
+      - name: Ensure Reports Directory Exists
+        run: mkdir -p field_validation_suite/reports field_validation_suite/zipped_artifact
+
+      - name: Run 300 Field Validation Test Cases
+        run: |
+          python field_validation_suite/run_field_validation_300.py
+
+      - name: Compress Excel Report into ZIP Folder
+        if: always()
+        run: |
+          cd field_validation_suite/reports
+          zip -r ../zipped_artifact/field-validation-test-reports.zip . -i "*.xlsx"
+
+      - name: Upload Zipped Field Validation Excel Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: field-validation-test-reports
+          path: field_validation_suite/zipped_artifact/field-validation-test-reports.zip
+          if-no-files-found: warn
+
+  # =========================================================================
+  # JOB 4: VULNERABILITY SECURITY TEST SUITE (300 TEST CASES)
+  # =========================================================================
+  vulnerability-security-tests:
+    name: Vulnerability Security Suite (300 Test Cases)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests pytest
+
+      - name: Ensure Reports Directory Exists
+        run: mkdir -p vulnerability_suite/reports vulnerability_suite/zipped_artifact
+
+      - name: Run 300 Security & Vulnerability Audits
+        env:
+          TARGET_URL: "https://petorb.onrender.com"
+        run: |
+          python vulnerability_suite/run_vulnerability_tests.py
+
+      - name: Compress Excel Report into ZIP Folder
+        if: always()
+        run: |
+          cd vulnerability_suite/reports
+          zip -r ../zipped_artifact/vulnerability-security-test-reports.zip . -i "*.xlsx"
+
+      - name: Upload Zipped Security Excel Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-security-test-reports
+          path: vulnerability_suite/zipped_artifact/vulnerability-security-test-reports.zip
+          if-no-files-found: warn
+
+  # =========================================================================
+  # JOB 5: LOAD & PERFORMANCE TEST SUITE (300 TEST CASES)
+  # =========================================================================
+  load-performance-tests:
+    name: Load & Performance Suite (300 Test Cases)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests
+
+      - name: Ensure Reports Directory Exists
+        run: mkdir -p loadtest_suite/reports loadtest_suite/zipped_artifact
+
+      - name: Run 300 Load Test Iterations
+        env:
+          TARGET_API_URL: "https://petorb.onrender.com/api"
+          HEALTH_CHECK_URL: "https://petorb.onrender.com/health"
+        run: |
+          python loadtest_suite/run_loadtest_300.py
+
+      - name: Compress Excel Report into ZIP Folder
+        if: always()
+        run: |
+          cd loadtest_suite/reports
+          zip -r ../zipped_artifact/load-performance-test-reports.zip . -i "*.xlsx"
+
+      - name: Upload Zipped Load Test Excel Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-performance-test-reports
+          path: loadtest_suite/zipped_artifact/load-performance-test-reports.zip
+          if-no-files-found: warn
