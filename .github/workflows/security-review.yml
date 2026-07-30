@@ -1,0 +1,60 @@
+name: Backend Security Review
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  security-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl
+
+      - name: Run security assessment
+        run: |
+          python scripts/security_review.py
+
+      - name: Fail on critical findings
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+          import sys
+          summary_path = pathlib.Path('Vulnerability Test Results/security-summary.json')
+          if not summary_path.exists():
+              raise SystemExit('Security summary not found')
+          summary = json.loads(summary_path.read_text(encoding='utf-8'))
+          print(json.dumps(summary, indent=2))
+          if summary.get('critical', 0) > 0:
+              raise SystemExit('Critical findings detected')
+          PY
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-review-reports
+          path: |
+            Vulnerability Test Results/
+          if-no-files-found: error
+
+      - name: Publish GitHub summary
+        if: always()
+        run: |
+          echo "## Security Review Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Reports generated in the workflow artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- See the attached reports for findings and endpoint inventory" >> $GITHUB_STEP_SUMMARY
