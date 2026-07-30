@@ -899,6 +899,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           _titles[_currentIndex],
           style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primaryText),
